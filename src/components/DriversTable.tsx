@@ -31,7 +31,6 @@ export function PtsDelta({ now, was }: { now: number; was: number }) {
 
 export default function DriversTable({ slots, baseById, onToggle }: Props) {
   let leaderPts: number | null = null;
-  let prevPts = 0;
 
   const rows = slots.map(({ driver: d, out }) => {
     let gap: number | null = null;
@@ -40,10 +39,9 @@ export default function DriversTable({ slots, baseById, onToggle }: Props) {
       if (leaderPts === null) {
         leaderPts = d.pts;
       } else {
-        gap = prevPts - d.pts;
+        gap = leaderPts - d.pts;
         toLeader = leaderPts - d.pts;
       }
-      prevPts = d.pts;
     }
     const b = baseById.get(d.id)!;
     const teams = [...d.teams.keys()].join(" / ");
@@ -88,8 +86,8 @@ export default function DriversTable({ slots, baseById, onToggle }: Props) {
           <th>Driver</th>
           <th className="n">vs actual</th>
           <th className="n">Pts</th>
-          <th className="n" title="Points behind the driver directly ahead">
-            Gap
+          <th className="n" title="Points behind the championship leader">
+            Gap to leader
           </th>
           <th className="n">Δ pts</th>
           <th className="n">Wins</th>
