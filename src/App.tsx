@@ -54,7 +54,7 @@ export default function App() {
   }, [year]);
 
   const base = useMemo(() => (data ? compute(data, new Set()) : null), [data]);
-  const cur = useMemo(
+  const recalculatedStandings = useMemo(
     () => (data ? compute(data, excluded) : null),
     [data, excluded],
   );
@@ -89,17 +89,17 @@ export default function App() {
   else if (error) status = error;
   else if (data && !hasRaces) status = `No race results for ${year} yet.`;
   else if (data) {
-    const last = data.races[data.races.length - 1];
-    status = `${year} season · ${data.races.length} race${data.races.length > 1 ? "s" : ""} completed, latest: ${last.name}.`;
+    const latestRace = data.races[data.races.length - 1];
+    status = `${year} season · ${data.races.length} race${data.races.length > 1 ? "s" : ""} completed, latest: ${latestRace.name}.`;
   }
 
   let note = null;
-  if (changed && base && cur && data) {
+  if (changed && base && recalculatedStandings && data) {
     const names = base.drivers
       .filter((d) => excluded.has(d.id))
       .map((d) => d.name)
       .join(", ");
-    const champ = cur.drivers[0];
+    const champ = recalculatedStandings.drivers[0];
     const was = base.drivers[0];
     note = (
       <div className="note">
@@ -186,19 +186,28 @@ export default function App() {
       </div>
       {note}
 
-      {hasRaces && base && cur && (
+      {hasRaces && base && recalculatedStandings && (
         <div className="panel">
           {tab === "drivers" && (
             <DriversTable
-              slots={slotOrder(base.drivers, cur.drivers, excluded)}
+              slots={slotOrder(
+                base.drivers,
+                recalculatedStandings.drivers,
+                excluded,
+              )}
               baseById={baseDrivers}
               onToggle={toggle}
             />
           )}
           {tab === "teams" && (
-            <TeamsTable teams={cur.teams} baseById={baseTeams} />
+            <TeamsTable
+              teams={recalculatedStandings.teams}
+              baseById={baseTeams}
+            />
           )}
-          {tab === "races" && <RacesTable races={cur.races} />}
+          {tab === "races" && (
+            <RacesTable races={recalculatedStandings.races} />
+          )}
         </div>
       )}
 
