@@ -1,31 +1,35 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { loadSeason } from './api';
-import { compute, slotOrder } from './scoring';
-import type { SeasonData } from './types';
-import DriversTable from './components/DriversTable';
-import TeamsTable from './components/TeamsTable';
-import RacesTable from './components/RacesTable';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { loadSeason } from "./api";
+import { compute, slotOrder } from "./scoring";
+import type { SeasonData } from "./types";
+import DriversTable from "./components/DriversTable";
+import TeamsTable from "./components/TeamsTable";
+import RacesTable from "./components/RacesTable";
 
-type Tab = 'drivers' | 'teams' | 'races';
+type Tab = "drivers" | "teams" | "races";
 const NOW = new Date().getFullYear();
-const TABS: [Tab, string][] = [['drivers', 'Drivers'], ['teams', 'Constructors'], ['races', 'Race winners']];
+const TABS: [Tab, string][] = [
+  ["drivers", "Drivers"],
+  ["teams", "Constructors"],
+  ["races", "Race winners"],
+];
 
 export default function App() {
   const [year, setYear] = useState(NOW);
   const [data, setData] = useState<SeasonData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
-  const [tab, setTab] = useState<Tab>('drivers');
+  const [tab, setTab] = useState<Tab>("drivers");
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setError('');
+    setError("");
     setData(null);
     setExcluded(new Set());
     loadSeason(year)
-      .then(d => {
+      .then((d) => {
         if (cancelled) return;
         // Default to the previous season if the current one hasn't started yet.
         if (!d.races.length && year === NOW) {
@@ -38,9 +42,9 @@ export default function App() {
       .catch((e: Error) => {
         if (cancelled) return;
         setError(
-          e.message && e.message !== 'Failed to fetch'
+          e.message && e.message !== "Failed to fetch"
             ? e.message
-            : 'Could not reach the F1 data service. Check your connection and try again.'
+            : "Could not reach the F1 data service. Check your connection and try again.",
         );
         setLoading(false);
       });
@@ -50,12 +54,21 @@ export default function App() {
   }, [year]);
 
   const base = useMemo(() => (data ? compute(data, new Set()) : null), [data]);
-  const cur = useMemo(() => (data ? compute(data, excluded) : null), [data, excluded]);
-  const baseDrivers = useMemo(() => new Map(base?.drivers.map(d => [d.id, d]) ?? []), [base]);
-  const baseTeams = useMemo(() => new Map(base?.teams.map(t => [t.id, t]) ?? []), [base]);
+  const cur = useMemo(
+    () => (data ? compute(data, excluded) : null),
+    [data, excluded],
+  );
+  const baseDrivers = useMemo(
+    () => new Map(base?.drivers.map((d) => [d.id, d]) ?? []),
+    [base],
+  );
+  const baseTeams = useMemo(
+    () => new Map(base?.teams.map((t) => [t.id, t]) ?? []),
+    [base],
+  );
 
   const toggle = useCallback((id: string, include: boolean) => {
-    setExcluded(prev => {
+    setExcluded((prev) => {
       const next = new Set(prev);
       if (include) next.delete(id);
       else next.add(id);
@@ -66,27 +79,37 @@ export default function App() {
   const hasRaces = !!data && data.races.length > 0;
   const changed = excluded.size > 0;
 
-  let status = '';
-  if (loading) status = '';
+  let status = "";
+  if (loading) status = "";
   else if (error) status = error;
   else if (data && !hasRaces) status = `No race results for ${year} yet.`;
   else if (data) {
     const last = data.races[data.races.length - 1];
-    status = `${year} season · ${data.races.length} race${data.races.length > 1 ? 's' : ''} completed, latest: ${last.name}.`;
+    status = `${year} season · ${data.races.length} race${data.races.length > 1 ? "s" : ""} completed, latest: ${last.name}.`;
   }
 
   let note = null;
   if (changed && base && cur && data) {
-    const names = base.drivers.filter(d => excluded.has(d.id)).map(d => d.name).join(', ');
+    const names = base.drivers
+      .filter((d) => excluded.has(d.id))
+      .map((d) => d.name)
+      .join(", ");
     const champ = cur.drivers[0];
     const was = base.drivers[0];
     note = (
       <div className="note">
-        <b>{excluded.size} driver{excluded.size > 1 ? 's' : ''} removed</b> ({names}). All {data.races.length} races have been rescored.{' '}
+        <b>
+          {excluded.size} driver{excluded.size > 1 ? "s" : ""} removed
+        </b>{" "}
+        ({names}). All {data.races.length} races have been rescored.{" "}
         {champ && was && champ.id !== was.id ? (
-          <>Champion becomes <b>{champ.name}</b> instead of {was.name}.</>
+          <>
+            <b>{champ.name}</b> becomes champion instead of {was.name}.
+          </>
         ) : champ ? (
-          <><b>{champ.name}</b> is still champion.</>
+          <>
+            <b>{champ.name}</b> is still champion.
+          </>
         ) : null}
       </div>
     );
@@ -99,17 +122,32 @@ export default function App() {
     <div className="wrap">
       <header>
         <h1>F1 Standings Recalculator</h1>
-        <p>Live championship tables, rebuilt race by race. Untick a driver and every result behind them moves up a place.</p>
+        <p>
+          Live championship tables, rebuilt race by race. Untick a driver and
+          every result behind them moves up a place.
+        </p>
       </header>
 
       <div className="bar">
         <label>
-          Season{' '}
-          <select aria-label="Season" value={year} onChange={e => setYear(+e.target.value)}>
-            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          Season{" "}
+          <select
+            aria-label="Season"
+            value={year}
+            onChange={(e) => setYear(+e.target.value)}
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
           </select>
         </label>
-        {changed && <button type="button" onClick={() => setExcluded(new Set())}>Restore all drivers</button>}
+        {changed && (
+          <button type="button" onClick={() => setExcluded(new Set())}>
+            Restore all drivers
+          </button>
+        )}
         <div className="tabs" role="tablist">
           {TABS.map(([id, label]) => (
             <button
@@ -125,27 +163,45 @@ export default function App() {
         </div>
       </div>
 
-      <div className={'status' + (error ? ' err' : '')} role="status" aria-live="polite">
-        {loading ? <><span className="spinner" />Loading {year} results…</> : status}
+      <div
+        className={"status" + (error ? " err" : "")}
+        role="status"
+        aria-live="polite"
+      >
+        {loading ? (
+          <>
+            <span className="spinner" />
+            Loading {year} results…
+          </>
+        ) : (
+          status
+        )}
       </div>
       {note}
 
       {hasRaces && base && cur && (
         <div className="panel">
-          {tab === 'drivers' && (
+          {tab === "drivers" && (
             <DriversTable
               slots={slotOrder(base.drivers, cur.drivers, excluded)}
               baseById={baseDrivers}
               onToggle={toggle}
             />
           )}
-          {tab === 'teams' && <TeamsTable teams={cur.teams} baseById={baseTeams} />}
-          {tab === 'races' && <RacesTable races={cur.races} />}
+          {tab === "teams" && (
+            <TeamsTable teams={cur.teams} baseById={baseTeams} />
+          )}
+          {tab === "races" && <RacesTable races={cur.races} />}
         </div>
       )}
 
       <footer>
-        Data: Jolpica F1 API (Ergast successor), fetched live in your browser. Points for each race are taken from the points that race actually awarded to each finishing position (so half-points races, double-points finales and sprint scoring carry through). Sprint points are included. Historic rules such as dropped results and shared drives are not modelled, and constructors’ tables before 1958 were unofficial.
+        Data: Jolpica F1 API (Ergast successor), fetched live in your browser.
+        Points for each race are taken from the points that race actually
+        awarded to each finishing position (so half-points races, double-points
+        finales and sprint scoring carry through). Sprint points are included.
+        Historic rules such as dropped results and shared drives are not
+        modelled, and constructors’ tables before 1958 were unofficial.
       </footer>
     </div>
   );
