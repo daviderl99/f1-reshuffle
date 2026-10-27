@@ -77,6 +77,11 @@ export default function App() {
   }, []);
 
   const hasRaces = !!data && data.races.length > 0;
+  const seasonOngoing =
+    !!data &&
+    data.totalRounds !== null &&
+    data.races.length < data.totalRounds &&
+    year === NOW;
   const changed = excluded.size > 0;
 
   let status = "";
@@ -101,14 +106,16 @@ export default function App() {
         <b>
           {excluded.size} driver{excluded.size > 1 ? "s" : ""} removed
         </b>{" "}
-        ({names}). All {data.races.length} races have been rescored.{" "}
+        ({names}). All {data.races.length} races have been rescored. <br />
         {champ && was && champ.id !== was.id ? (
           <>
-            <b>{champ.name}</b> becomes champion instead of {was.name}.
+            <b>{champ.name}</b> becomes{" "}
+            {seasonOngoing ? "championship leader" : "champion"}.
           </>
         ) : champ ? (
           <>
-            <b>{champ.name}</b> is still champion.
+            <b>{champ.name}</b> is still{" "}
+            {seasonOngoing ? "the championship leader" : "champion"}.
           </>
         ) : null}
       </div>

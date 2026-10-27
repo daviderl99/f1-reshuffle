@@ -20,6 +20,7 @@ export interface Race {
 export interface SeasonData {
   year: number;
   races: Race[];
+  totalRounds: number | null;
 }
 
 export interface Scored extends Row {
